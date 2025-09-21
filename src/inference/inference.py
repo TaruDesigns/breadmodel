@@ -2,7 +2,6 @@ import json
 import os
 import shutil
 from pathlib import Path
-from typing import Dict, Tuple
 
 import cv2
 import numpy as np
@@ -34,7 +33,7 @@ class InferenceHandler:
 
     def segmentation_from_imgpath(
         self, input_img_path: Path, confidence: float | None = None
-    ) -> Tuple[Path, list[Results]]:
+    ) -> tuple[Path, list[Results]]:
         """Creates segmentation image
         Uses model from https://universe.roboflow.com/school-dkgod/bread-segmentation-hfhm8/model/4
         Creates a new image that has the segmented bread drawn over it. Returns image path and the results (json object)
@@ -83,7 +82,7 @@ class InferenceHandler:
 
     def detection_from_imgpath(
         self, input_img_path: Path, confidence: float | None = None
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Use detection model to get labels
 
         Args:
@@ -107,7 +106,8 @@ class InferenceHandler:
                 results[0].to_json()
             )  # We already check if there's any and we only expect one image when we call this
             predictions = {
-                prediction["name"]: prediction["confidence"] for prediction in resulttojson
+                prediction["name"]: prediction["confidence"]
+                for prediction in resulttojson
             }
         else:
             raise NoDetections()
@@ -142,7 +142,7 @@ class InferenceHandler:
             return f"Confirmed that it's {label}"
 
     def get_message_content_from_labels(
-        self, predictions: Dict[str, float], min_confidence: float | None = None
+        self, predictions: dict[str, float], min_confidence: float | None = None
     ) -> str:
         # TODO: This is responsbility of the bot
         """Generate a message based on the input labels
@@ -160,7 +160,9 @@ class InferenceHandler:
             if confidence >= min_confidence:
                 labeltext = (
                     labeltext
-                    + self.map_confidence_to_sentiment(confidence=confidence, label=label)
+                    + self.map_confidence_to_sentiment(
+                        confidence=confidence, label=label
+                    )
                     + " "
                 )
         logger.debug(labeltext)

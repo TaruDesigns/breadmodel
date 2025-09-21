@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -67,6 +66,6 @@ async def check_cuda():
             "cuda_device": torch.cuda.current_device(),
             "cuda_device_count": torch.cuda.device_count(),
         }
-    except:
+    except Exception:
         results = {"cuda": "no"}
     return results
