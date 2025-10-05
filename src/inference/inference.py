@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 from loguru import logger
 from ultralytics import YOLO
-from ultralytics.engine.results import Results
+from ultralytics.engine.results import Masks, Results
 
 from settings import SETTINGS
 
@@ -106,8 +106,7 @@ class InferenceHandler:
                 results[0].to_json()
             )  # We already check if there's any and we only expect one image when we call this
             predictions = {
-                prediction["name"]: prediction["confidence"]
-                for prediction in resulttojson
+                prediction["name"]: prediction["confidence"] for prediction in resulttojson
             }
         else:
             raise NoDetections()
@@ -160,19 +159,35 @@ class InferenceHandler:
             if confidence >= min_confidence:
                 labeltext = (
                     labeltext
-                    + self.map_confidence_to_sentiment(
-                        confidence=confidence, label=label
-                    )
+                    + self.map_confidence_to_sentiment(confidence=confidence, label=label)
                     + " "
                 )
         logger.debug(labeltext)
         return labeltext
 
+    @staticmethod
+    def get_max_area_mask(results) -> Masks:
+        max_area = 0
+        biggest_mask = None
+
+        for result in results:
+            if result.masks is None:
+                continue
+            for mask in result.masks:
+                area = mask.data.sum()
+                if area > max_area:
+                    max_area = area
+                    biggest_mask = mask
+
+        return biggest_mask
+
     def estimate_roundness_from_mask(self, results: list[Results]) -> float:
         """Estimates roundness from mask, based on how close it is to a perfect circunscribed circle"""
         if results and results[0].masks is not None:
-            orig_shape = results[0].masks.orig_shape
-            mask = results[0].masks.xy
+            biggest_mask = self.get_max_area_mask(results)
+
+            orig_shape = biggest_mask.orig_shape
+            mask = biggest_mask.xy
         else:
             raise ValueError("No masks to read")
         if orig_shape is None:
