@@ -41,7 +41,11 @@ async def predict(
             segmented_img = seg_result[0]
             with open(segmented_img, "rb") as img_file:
                 image = base64.b64encode(img_file.read()).decode("utf-8")
-            roundness = handler.estimate_roundness_from_mask(seg_result[1])
+            try:
+                roundness = handler.estimate_roundness_from_mask(seg_result[1])
+            except Exception as e:
+                logger.warning(str(e))
+                roundness = None
         except NoSegmentation:
             image = None
             roundness = None
